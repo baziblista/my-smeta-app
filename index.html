@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Смета PRO</title>
+    <title>Смета PRO — Каталог материалов</title>
     <style>
         * {
             -webkit-tap-highlight-color: transparent;
@@ -13,15 +13,13 @@
         }
 
         body {
-            font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+            font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif;
             margin: 0;
             padding: 0;
             background: #f2f2f6;
-            /* iOS 13+ фон */
             color: #000;
         }
 
-        /* Главный контейнер с отступами под динамический остров */
         .main-container {
             padding-top: env(safe-area-inset-top, 20px);
             padding-bottom: env(safe-area-inset-bottom, 20px);
@@ -29,31 +27,49 @@
             padding-right: 16px;
         }
 
-        /* Крупный навигейшен-бар как в iOS */
-        .ios-header {
-            margin-bottom: 24px;
-            margin-top: 8px;
+        /* Tab Bar (снизу) */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            border-top: 0.5px solid #c6c6c8;
+            display: flex;
+            padding: 8px 20px 20px;
+            gap: 24px;
+            justify-content: center;
+            z-index: 100;
         }
 
-        .ios-header h1 {
-            font-size: 34px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            margin: 0;
-            background: linear-gradient(135deg, #1c1c1e 0%, #3a3a3e 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-        }
-
-        .ios-header p {
-            font-size: 15px;
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
             color: #8e8e93;
-            margin-top: 6px;
-            margin-bottom: 0;
+            padding: 8px 0;
+            border-radius: 24px;
+            transition: all 0.1s;
         }
 
-        /* Карточки в стиле iOS (как ячейки Settings) */
+        .tab-btn.active {
+            color: #007aff;
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            display: none;
+            margin-bottom: 80px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* iOS карточки */
         .ios-card {
             background: #ffffff;
             border-radius: 12px;
@@ -64,48 +80,32 @@
         }
 
         .card-header {
-            padding: 16px 16px 8px 16px;
+            padding: 16px 16px 8px;
             font-size: 13px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
             color: #8e8e93;
-            background: #ffffff;
         }
 
         .card-content {
             padding: 8px 16px;
         }
 
-        /* Поля ввода как в iOS */
-        .ios-input {
+        .ios-input, .ios-search {
             background: #f2f2f6;
             border: none;
             border-radius: 10px;
             padding: 14px 16px;
             font-size: 17px;
-            font-family: -apple-system, 'SF Pro Text', system-ui;
             width: 100%;
             margin-bottom: 12px;
-            transition: background 0.2s;
-            color: #000;
         }
 
-        .ios-input:focus {
+        .ios-input:focus, .ios-search:focus {
             outline: none;
             background: #e5e5ea;
         }
 
-        .row-double {
-            display: flex;
-            gap: 12px;
-        }
-
-        .row-double .ios-input {
-            flex: 1;
-        }
-
-        /* Кнопки в iOS-стиле (тактильные) */
         .ios-btn {
             background: #007aff;
             border: none;
@@ -115,10 +115,8 @@
             font-weight: 590;
             color: white;
             width: 100%;
-            transition: 0.1s linear;
             cursor: pointer;
             margin-bottom: 12px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
 
         .ios-btn:active {
@@ -126,357 +124,413 @@
             background: #0063ce;
         }
 
-        .photo-group {
-            display: flex;
-            gap: 12px;
-            margin: 8px 0 8px 0;
-        }
-
-        .photo-group .ios-btn {
+        .btn-small {
             background: #5856d6;
-            margin-bottom: 0;
-        }
-
-        .photo-group .ios-btn:active {
-            background: #4643c4;
-        }
-
-        /* Список позиций — стиль UITableView */
-        .items-list {
-            margin-top: 4px;
-        }
-
-        .item-row {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 16px;
-            background: #ffffff;
-            border-bottom: 0.5px solid #c6c6c8;
-            transition: background 0.2s;
-            touch-action: pan-x;
-        }
-
-        /* Свайп-эффект при удалении (будет динамически) */
-        .item-row.swiping {
-            background: #ff3b30;
-            transition: transform 0.2s ease;
-        }
-
-        .item-img {
-            width: 56px;
-            height: 56px;
-            background: #f2f2f6;
-            border-radius: 12px;
-            object-fit: cover;
-        }
-
-        .item-info {
-            flex: 1;
-        }
-
-        .item-name {
-            font-weight: 500;
-            font-size: 17px;
-            margin-bottom: 4px;
-        }
-
-        .item-meta {
-            font-size: 14px;
-            color: #6c6c70;
-        }
-
-        .item-price {
-            font-weight: 590;
-            color: #007aff;
+            padding: 10px;
             font-size: 15px;
         }
 
-        /* Блок итого */
+        /* Список материалов */
+        .material-item, .estimate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 0.5px solid #c6c6c8;
+        }
+
+        .material-info, .estimate-info {
+            flex: 1;
+        }
+
+        .material-name {
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .material-price {
+            font-size: 14px;
+            color: #007aff;
+        }
+
+        .material-cat {
+            font-size: 12px;
+            color: #8e8e93;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: #f2f2f6;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
         .total-box {
             background: #f2f2f6;
             padding: 16px;
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
             font-weight: 590;
             font-size: 18px;
             border-top: 0.5px solid #c6c6c8;
         }
 
-        #totalSum {
+        #estimateTotal {
             font-size: 28px;
             font-weight: 700;
             color: #007aff;
         }
 
-        .clear-btn {
-            background: #ff3b30;
-            margin: 16px 16px 20px 16px;
-            width: calc(100% - 32px);
+        /* Модальное окно */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
-
-        .clear-btn:active {
-            background: #d70015;
+        .modal-card {
+            background: white;
+            width: 90%;
+            border-radius: 20px;
+            padding: 20px;
         }
-
-        /* Обработка свайпов (визуальный фидбек) */
+        .hidden {
+            display: none;
+        }
         .swipe-hint {
             font-size: 12px;
             color: #8e8e93;
+            margin: 8px 0;
             text-align: center;
-            margin: 12px 0 8px;
         }
     </style>
 </head>
 <body>
 <div class="main-container">
-    <div class="ios-header">
-        <h1>Смета</h1>
-        <p>Сантехника · Электрика</p>
+    <!-- Вкладки -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="estimate">📋 Смета</button>
+        <button class="tab-btn" data-tab="catalog">📦 Каталог</button>
+        <button class="tab-btn" data-tab="add-material">➕ Добавить</button>
     </div>
 
-    <!-- Форма добавления -->
-    <div class="ios-card">
-        <div class="card-header">➕ НОВАЯ ПОЗИЦИЯ</div>
-        <div class="card-content">
-            <input type="text" id="itemName" class="ios-input" placeholder="Наименование">
-            <div class="row-double">
-                <input type="number" id="itemQty" class="ios-input" placeholder="Кол-во" value="1" step="1">
-                <input type="number" id="itemPrice" class="ios-input" placeholder="Цена (₽)" value="0" step="0.01">
+    <!-- 1. Смета -->
+    <div id="tab-estimate" class="tab-content active">
+        <div class="ios-card">
+            <div class="card-header">ТЕКУЩАЯ СМЕТА</div>
+            <div class="card-content">
+                <div id="estimateList"></div>
+                <div class="total-box">
+                    <span>Итого</span>
+                    <span><span id="estimateTotal">0</span> ₽</span>
+                </div>
+                <button id="clearEstimateBtn" class="ios-btn" style="background:#ff3b30;">Очистить смету</button>
             </div>
-            <div class="photo-group">
-                <button id="galleryBtn" class="ios-btn">🖼️ Галерея</button>
-                <button id="cameraBtn" class="ios-btn">📸 Камера</button>
-            </div>
-            <button id="addItemBtn" class="ios-btn" style="background:#30b0c0;">+ Добавить</button>
         </div>
     </div>
 
-    <!-- Список сметы -->
-    <div class="ios-card">
-        <div class="card-header">📋 ПОЗИЦИИ ﹒ СВАЙП ВЛЕВО ДЛЯ УДАЛЕНИЯ</div>
-        <div id="itemsList" class="items-list"></div>
-        <div class="total-box">
-            <span>Итого</span>
-            <span><span id="totalSum">0</span> ₽</span>
+    <!-- 2. Каталог материалов -->
+    <div id="tab-catalog" class="tab-content">
+        <div class="ios-card">
+            <div class="card-header">КАТАЛОГ (нажмите + чтобы добавить в смету)</div>
+            <div class="card-content">
+                <input type="text" id="searchCatalog" class="ios-search" placeholder="🔍 Поиск материала">
+                <div id="catalogList"></div>
+            </div>
         </div>
     </div>
-    <button id="clearBtn" class="ios-btn clear-btn">Сбросить всё</button>
+
+    <!-- 3. Добавление нового материала -->
+    <div id="tab-add-material" class="tab-content">
+        <div class="ios-card">
+            <div class="card-header">НОВЫЙ МАТЕРИАЛ</div>
+            <div class="card-content">
+                <input type="text" id="newMatName" class="ios-input" placeholder="Название (труба ПНД 25)">
+                <input type="number" id="newMatPrice" class="ios-input" placeholder="Цена за шт/м" step="0.01">
+                <select id="newMatCategory" class="ios-input">
+                    <option value="Сантехника">🚰 Сантехника</option>
+                    <option value="Электрика">⚡ Электрика</option>
+                    <option value="Расходники">🧰 Расходники</option>
+                    <option value="Инструмент">🔧 Инструмент</option>
+                </select>
+                <button id="saveMaterialBtn" class="ios-btn">💾 Сохранить в каталог</button>
+                <p style="font-size:12px; color:#888; margin-top:8px;">*Материал появится в каталоге и будет доступен офлайн</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // ---------- STORAGE ----------
-    let items = [];
-    let currentPhotoData = null;
+    // ------------------  ХРАНИЛИЩЕ  ------------------
+    let materials = [];      // { id, name, price, category }
+    let estimate = [];       // { materialId, name, price, qty, photo }
 
-    function loadFromStorage() {
-        const saved = localStorage.getItem('estimate_items_ios');
-        if (saved) {
-            try {
-                items = JSON.parse(saved);
-                renderItems();
-            } catch(e) {}
+    let nextMaterialId = 100;
+
+    // Загрузка данных
+    function loadData() {
+        const savedMaterials = localStorage.getItem('catalog_materials');
+        if(savedMaterials) {
+            materials = JSON.parse(savedMaterials);
+            if(materials.length && materials[0].id === undefined) {
+                // миграция
+                materials = materials.map((m,idx) => ({...m, id: idx+100}));
+            }
+            if(materials.length) nextMaterialId = Math.max(...materials.map(m=>m.id), 99)+1;
+        } else {
+            // Стартовый каталог (сантехника + электрика)
+            materials = [
+                { id: 100, name: "Труба ПНД 25мм", price: 185, category: "Сантехника" },
+                { id: 101, name: "Кран шаровый 1/2", price: 320, category: "Сантехника" },
+                { id: 102, name: "Смеситель однорычажный", price: 2150, category: "Сантехника" },
+                { id: 103, name: "Розетка Schneider Electric", price: 280, category: "Электрика" },
+                { id: 104, name: "Автомат 16A", price: 190, category: "Электрика" },
+                { id: 105, name: "Кабель ВВГ 3x1.5", price: 45, category: "Электрика" },
+                { id: 106, name: "Лента ФУМ", price: 35, category: "Расходники" },
+                { id: 107, name: "Дюбель-гвоздь 6x40", price: 12, category: "Расходники" }
+            ];
+        }
+
+        const savedEstimate = localStorage.getItem('current_estimate');
+        if(savedEstimate) {
+            estimate = JSON.parse(savedEstimate);
+        } else {
+            estimate = [];
+        }
+        renderCatalog();
+        renderEstimate();
+    }
+
+    function saveMaterials() {
+        localStorage.setItem('catalog_materials', JSON.stringify(materials));
+    }
+    function saveEstimate() {
+        localStorage.setItem('current_estimate', JSON.stringify(estimate));
+    }
+
+    // Добавить материал в каталог
+    function addMaterialToCatalog(name, price, category) {
+        if(!name.trim()) return false;
+        const newMaterial = {
+            id: nextMaterialId++,
+            name: name.trim(),
+            price: parseFloat(price),
+            category: category || "Другое"
+        };
+        materials.push(newMaterial);
+        saveMaterials();
+        renderCatalog();
+        return true;
+    }
+
+    // Редактировать материал
+    function editMaterial(id, newName, newPrice) {
+        const mat = materials.find(m => m.id == id);
+        if(mat) {
+            if(newName) mat.name = newName;
+            if(!isNaN(newPrice) && newPrice>=0) mat.price = parseFloat(newPrice);
+            saveMaterials();
+            renderCatalog();
         }
     }
 
-    function saveToStorage() {
-        localStorage.setItem('estimate_items_ios', JSON.stringify(items));
+    function deleteMaterial(id) {
+        materials = materials.filter(m => m.id != id);
+        saveMaterials();
+        renderCatalog();
     }
 
-    // Функция отрисовки с поддержкой свайп-удаления (как в iOS)
-    function renderItems() {
-        const container = document.getElementById('itemsList');
-        if (!container) return;
+    // Добавить в смету (с возможностью фото)
+    function addToEstimate(material, qty = 1) {
+        estimate.push({
+            materialId: material.id,
+            name: material.name,
+            price: material.price,
+            qty: qty,
+            photo: null
+        });
+        saveEstimate();
+        renderEstimate();
+        // переключим на вкладку Смета
+        document.querySelector('.tab-btn[data-tab="estimate"]').click();
+    }
+
+    function removeFromEstimate(index) {
+        estimate.splice(index,1);
+        saveEstimate();
+        renderEstimate();
+    }
+
+    function updateEstimateQty(index, newQty) {
+        if(newQty > 0) {
+            estimate[index].qty = newQty;
+            saveEstimate();
+            renderEstimate();
+        }
+    }
+
+    // Фото для позиции в смете
+    function addPhotoToEstimate(index) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if(file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    estimate[index].photo = ev.target.result;
+                    saveEstimate();
+                    renderEstimate();
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+    function viewPhoto(src) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `<div class="modal-card"><img src="${src}" style="width:100%; border-radius:16px;"><button class="ios-btn" style="margin-top:16px;" onclick="this.closest('.modal').remove()">Закрыть</button></div>`;
+        document.body.appendChild(modal);
+    }
+
+    // ---------- ОТРИСОВКА ----------
+    function renderCatalog() {
+        const container = document.getElementById('catalogList');
+        if(!container) return;
+        let search = (document.getElementById('searchCatalog')?.value || '').toLowerCase();
+        let filtered = materials.filter(m => m.name.toLowerCase().includes(search));
+        container.innerHTML = '';
+        filtered.forEach(mat => {
+            const div = document.createElement('div');
+            div.className = 'material-item';
+            div.innerHTML = `
+                <div class="material-info">
+                    <div class="material-name">${escapeHtml(mat.name)}</div>
+                    <div class="material-price">${mat.price} ₽</div>
+                    <div class="material-cat">${mat.category}</div>
+                </div>
+                <div class="action-group">
+                    <button class="icon-btn edit-mat" data-id="${mat.id}">✏️</button>
+                    <button class="icon-btn del-mat" data-id="${mat.id}">🗑️</button>
+                    <button class="icon-btn add-est" data-id="${mat.id}" style="background:#34c759; color:white;">+</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        // события
+        document.querySelectorAll('.edit-mat').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.dataset.id);
+                const mat = materials.find(m=>m.id===id);
+                if(mat) {
+                    let newName = prompt("Новое название", mat.name);
+                    let newPrice = prompt("Новая цена (₽)", mat.price);
+                    if(newName) editMaterial(id, newName, parseFloat(newPrice));
+                }
+            });
+        });
+        document.querySelectorAll('.del-mat').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(confirm("Удалить материал из каталога?")) deleteMaterial(parseInt(btn.dataset.id));
+            });
+        });
+        document.querySelectorAll('.add-est').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseInt(btn.dataset.id);
+                const material = materials.find(m=>m.id===id);
+                if(material) addToEstimate(material);
+            });
+        });
+    }
+    function renderEstimate() {
+        const container = document.getElementById('estimateList');
+        if(!container) return;
         container.innerHTML = '';
         let total = 0;
-
-        items.forEach((item, idx) => {
-            total += item.qty * item.price;
-            const row = document.createElement('div');
-            row.className = 'item-row';
-            row.setAttribute('data-idx', idx);
-
-            // Внутренности строки
-            row.innerHTML = `
-                ${item.photo ? `<img src="${item.photo}" class="item-img" onclick="event.stopPropagation(); viewPhotoFull('${item.photo}')">` : `<div class="item-img" style="display:flex; align-items:center; justify-content:center; font-size:26px;">🛠️</div>`}
-                <div class="item-info">
-                    <div class="item-name">${escapeHtml(item.name)}</div>
-                    <div class="item-meta">${item.qty} шт × ${item.price} ₽</div>
+        estimate.forEach((item, idx) => {
+            total += item.price * item.qty;
+            const div = document.createElement('div');
+            div.className = 'estimate-item';
+            div.innerHTML = `
+                <div class="estimate-info">
+                    <div class="material-name">${escapeHtml(item.name)}</div>
+                    <div>${item.qty} шт × ${item.price} ₽ = <strong>${(item.price*item.qty).toFixed(2)} ₽</strong></div>
+                    ${item.photo ? `<img src="${item.photo}" style="width:44px; height:44px; border-radius:10px; margin-top:6px;" onclick="viewPhoto('${item.photo}')">` : '<span style="font-size:12px; color:#aaa;">🖼️ нет фото</span>'}
                 </div>
-                <div class="item-price">${(item.qty * item.price).toFixed(2)} ₽</div>
+                <div class="action-group">
+                    <button class="icon-btn" onclick="window.addPhotoToEstimate(${idx})">📷</button>
+                    <input type="number" value="${item.qty}" step="1" style="width:60px; border-radius:10px; border:1px solid #ccc;" onchange="window.updateEstimateQty(${idx}, parseInt(this.value))">
+                    <button class="icon-btn" onclick="window.removeFromEstimate(${idx})" style="background:#ff3b30; color:white;">✖</button>
+                </div>
             `;
-
-            // Логика свайпа (touch-события)
-            let startX = 0;
-            let currentX = 0;
-            let isSwiping = false;
-
-            row.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isSwiping = true;
-                row.style.transition = 'none';
-            });
-
-            row.addEventListener('touchmove', (e) => {
-                if (!isSwiping) return;
-                currentX = e.touches[0].clientX;
-                const diff = currentX - startX;
-                if (diff < 0) { // свайп влево
-                    const shift = Math.max(diff, -80);
-                    row.style.transform = `translateX(${shift}px)`;
-                    e.preventDefault();
-                }
-            });
-
-            row.addEventListener('touchend', (e) => {
-                if (!isSwiping) return;
-                const diff = currentX - startX;
-                if (diff < -45) {
-                    // Удаляем с анимацией
-                    row.style.transition = 'transform 0.2s ease';
-                    row.style.transform = 'translateX(-100%)';
-                    setTimeout(() => {
-                        removeItem(idx);
-                    }, 180);
-                } else {
-                    row.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
-                    row.style.transform = 'translateX(0px)';
-                }
-                isSwiping = false;
-                startX = 0;
-                currentX = 0;
-            });
-
-            container.appendChild(row);
+            container.appendChild(div);
         });
-
-        document.getElementById('totalSum').innerText = total.toFixed(2);
-        saveToStorage();
+        document.getElementById('estimateTotal').innerText = total.toFixed(2);
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 
-    function removeItem(index) {
-        items.splice(index, 1);
-        renderItems();
-        // Лёгкая тактильная вибрация (если поддерживается)
-        if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(10);
-    }
+    // Глобальные функции
+    window.addPhotoToEstimate = addPhotoToEstimate;
+    window.updateEstimateQty = updateEstimateQty;
+    window.removeFromEstimate = removeFromEstimate;
+    window.viewPhoto = viewPhoto;
 
-    function addItemLogic() {
-        const name = document.getElementById('itemName').value.trim();
-        let qty = parseFloat(document.getElementById('itemQty').value);
-        let price = parseFloat(document.getElementById('itemPrice').value);
+    // Очистка сметы
+    document.getElementById('clearEstimateBtn')?.addEventListener('click', ()=>{
+        if(confirm("Очистить всю смету?")) { estimate = []; saveEstimate(); renderEstimate(); }
+    });
 
-        if (isNaN(qty) || qty <= 0) qty = 1;
-        if (isNaN(price) || price < 0) price = 0;
-        if (!name) {
-            alert('Введите название позиции');
-            return;
+    // Добавление материала
+    document.getElementById('saveMaterialBtn')?.addEventListener('click', ()=>{
+        const name = document.getElementById('newMatName').value;
+        const price = parseFloat(document.getElementById('newMatPrice').value);
+        const category = document.getElementById('newMatCategory').value;
+        if(!name) { alert("Введите название"); return; }
+        if(isNaN(price) || price<0) { alert("Введите корректную цену"); return; }
+        if(addMaterialToCatalog(name, price, category)) {
+            document.getElementById('newMatName').value = '';
+            document.getElementById('newMatPrice').value = '';
+            alert("Материал добавлен в каталог!");
+            document.querySelector('.tab-btn[data-tab="catalog"]').click();
         }
+    });
 
-        items.push({
-            name: name,
-            qty: qty,
-            price: price,
-            photo: currentPhotoData || null
+    // Поиск по каталогу
+    document.getElementById('searchCatalog')?.addEventListener('input', () => renderCatalog());
+
+    // Переключение вкладок
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tabId = btn.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            if(tabId === 'catalog') renderCatalog();
         });
+    });
 
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemQty').value = '1';
-        document.getElementById('itemPrice').value = '0';
-        currentPhotoData = null;
-        renderItems();
-
-        if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(5);
-    }
-
-    // ----- ФОТО -----
-    function selectFromGallery() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    currentPhotoData = ev.target.result;
-                    alert('🖼️ Фото добавлено к следующей позиции');
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        input.click();
-    }
-
-    function takePhotoFromCamera() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.capture = 'environment';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    currentPhotoData = ev.target.result;
-                    alert('📸 Фото с камеры готово');
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        input.click();
-    }
-
-    window.viewPhotoFull = (src) => {
-        const modal = document.createElement('div');
-        modal.style.position = 'fixed';
-        modal.style.top = '0';
-        modal.style.left = '0';
-        modal.style.width = '100%';
-        modal.style.height = '100%';
-        modal.style.backgroundColor = 'rgba(0,0,0,0.9)';
-        modal.style.display = 'flex';
-        modal.style.alignItems = 'center';
-        modal.style.justifyContent = 'center';
-        modal.style.zIndex = '10000';
-        modal.style.backdropFilter = 'blur(8px)';
-        const img = document.createElement('img');
-        img.src = src;
-        img.style.maxWidth = '90%';
-        img.style.maxHeight = '90%';
-        img.style.borderRadius = '24px';
-        modal.appendChild(img);
-        modal.onclick = () => document.body.removeChild(modal);
-        document.body.appendChild(modal);
-    };
-
-    function clearAll() {
-        if (confirm('Сбросить все позиции?')) {
-            items = [];
-            currentPhotoData = null;
-            renderItems();
-        }
-    }
-
-    // ----- НАЗНАЧЕНИЕ КНОПОК -----
-    document.getElementById('addItemBtn').addEventListener('click', addItemLogic);
-    document.getElementById('galleryBtn').addEventListener('click', selectFromGallery);
-    document.getElementById('cameraBtn').addEventListener('click', takePhotoFromCamera);
-    document.getElementById('clearBtn').addEventListener('click', clearAll);
-
-    loadFromStorage();
+    loadData();
 </script>
 </body>
 </html>
 
+    
