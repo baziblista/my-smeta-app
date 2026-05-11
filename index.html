@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Мои сметы</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 16px; background: #f0f2f5; }
+        .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .item { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; gap: 12px; align-items: center; }
+        .item-img { width: 60px; height: 60px; background: #f9f9f9; border-radius: 8px; object-fit: cover; }
+        .item-info { flex: 1; }
+        .item-name { font-weight: bold; margin-bottom: 4px; }
+        .item-price { color: #2c6e2c; font-weight: bold; }
+        input, button { padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: #007aff; color: white; border: none; cursor: pointer; margin-top: 8px; }
+        .add-btn { background: #28a745; width: 100%; }
+        .total { font-size: 24px; font-weight: bold; text-align: right; color: #007aff; }
+        h2 { margin-top: 0; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>📋 Новая смета</h2>
+    <input type="text" id="itemName" placeholder="Наименование (например, труба 25)" style="width: 100%; margin-bottom: 8px;">
+    <input type="number" id="itemQty" placeholder="Кол-во" value="1" style="width: 30%;">
+    <input type="number" id="itemPrice" placeholder="Цена за шт/м" value="0" step="0.01" style="width: 30%;">
+    <button id="addPhotoBtn">📸 Добавить фото</button>
+    <button class="add-btn" id="addItemBtn">+ Добавить позицию</button>
+</div>
+
+<div class="card">
+    <h2>🧾 Позиции</h2>
+    <div id="itemsList"></div>
+    <div class="total">Итого: <span id="totalSum">0</span> ₽</div>
+    <button id="clearBtn" style="background:#ff3b30; margin-top:16px;">Очистить всё</button>
+</div>
+
+<script>
+    let items = [];
+    let currentPhotoData = null; // для хранения фото перед добавлением
+
+    function loadFromStorage() {
+        const saved = localStorage.getItem('estimate_items');
+        if(saved) {
+            items = JSON.parse(saved);
+            renderItems();
+        }
+    }
+
+    function saveToStorage() {
+        localStorage.setItem('estimate_items', JSON.stringify(items));
+    }
+
+    function renderItems() {
+        const container = document.getElementById('itemsList');
+        if(!container) return;
+        container.innerHTML = '';
+        let total = 0;
+        items.forEach((item, idx) => {
+            total += item.qty * item.price;
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `
+                ${item.photo ? `<img src="${item.photo}" class="item-img" onclick="viewPhoto('${item.photo}')">` : '<div class="item-img" style="background:#ddd; display:flex; align-items:center; justify-content:center;">📷</div>'}
+                <div class="item-info">
+                    <div class="item-name">${escapeHtml(item.name)}</div>
+                    <div>${item.qty} шт × ${item.price} ₽ = <span class="item-price">${(item.qty * item.price).toFixed(2)} ₽</span></div>
+                </div>
+                <button onclick="removeItem(${idx})" style="background:#ff6b6b; padding:4px 8px;">✖</button>
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById('totalSum').innerText = total.toFixed(2);
+        saveToStorage();
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function removeItem(index) {
+        items.splice(index, 1);
+        renderItems();
+    }
+
+    function addItem() {
+        const name = document.getElementById('itemName').value.trim();
+        const qty = parseFloat(document.getElementById('itemQty').value);
+        const price = parseFloat(document.getElementById('itemPrice').value);
+        if(!name || isNaN(qty) || isNaN(price)) {
+            alert('Заполните название, количество и цену');
+            return;
+        }
+        items.push({
+            name: name,
+            qty: qty,
+            price: price,
+            photo: currentPhotoData || null
+        });
+        renderItems();
+        // очищаем поля
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemQty').value = '1';
+        document.getElementById('itemPrice').value = '0';
+        currentPhotoData = null;
+        alert('Позиция добавлена' + (currentPhotoData ? ' с фото' : ''));
+    }
+
+    // Работа с фото через камеру/галерею на iPhone
+    function addPhoto() {
+        // создаём временный input
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment'; // сразу камера
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if(file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    currentPhotoData = ev.target.result; // base64 картинка
+                    alert('Фото добавлено к следующей позиции!');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Выберите изображение');
+            }
+        };
+        input.click();
+    }
+
+    function viewPhoto(src) {
+        const w = window.open();
+        w.document.write(`<img src="${src}" style="max-width:100%; margin-top:20px;">`);
+    }
+
+    function clearAll() {
+        if(confirm('Удалить все позиции?')) {
+            items = [];
+            currentPhotoData = null;
+            renderItems();
+        }
+    }
+
+    document.getElementById('addItemBtn').addEventListener('click', addItem);
+    document.getElementById('addPhotoBtn').addEventListener('click', addPhoto);
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+
+    loadFromStorage();
+</script>
+</body>
+</html>
